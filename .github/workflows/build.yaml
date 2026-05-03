@@ -1,11 +1,11 @@
 name: Build Windows EXE
 
 on:
-  workflow_dispatch: # Keeps it manual, as you requested earlier
+  workflow_dispatch: 
 
 jobs:
   build:
-    runs-on: windows-latest # CRITICAL: Forces GitHub to use a Windows machine
+    runs-on: windows-latest 
 
     steps:
       - name: Checkout code
@@ -14,19 +14,19 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22' # Matches the original repo version
-          cache: true
+          go-version: '1.22'
+          cache: false # Turned off temporarily to prevent cache confusion
 
       - name: Download dependencies
+        working-directory: ./acexy # <--- THIS IS THE FIX
         run: go mod download
 
       - name: Build Executable
-        # Compiles specifically for Windows and names the output 'acexy.exe'
-        # -ldflags "-s -w" strips debugging info to make the file smaller
+        working-directory: ./acexy # <--- AND HERE
         run: go build -v -ldflags "-s -w" -o acexy.exe .
 
       - name: Upload Executable
         uses: actions/upload-artifact@v4
         with:
           name: Acexy-Windows-EXE
-          path: acexy.exe
+          path: acexy/acexy.exe # <--- Point it to the subfolder to grab the file

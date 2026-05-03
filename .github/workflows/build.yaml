@@ -1,32 +1,32 @@
-name: Go
+name: Build Windows EXE
+
 on:
-  push:
-  pull_request:
+  workflow_dispatch: # Keeps it manual, as you requested earlier
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        go-version: ["1.22","1.23"]
-    defaults:
-      run:
-        working-directory: ./acexy
-    name: Go ${{ matrix.go-version }} sample
+    runs-on: windows-latest # CRITICAL: Forces GitHub to use a Windows machine
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Go ${{ matrix.go-version }}
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go-version }}
-      - name: Install dependencies
-        run: go get .
-      - name: Build
-        run: go build -v ./...
-      - name: Test
-        run: go test -v ./... -json | tee TestResults-${{ matrix.go-version }}.json
-      - name: Upload test results
+          go-version: '1.22' # Matches the original repo version
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Build Executable
+        # Compiles specifically for Windows and names the output 'acexy.exe'
+        # -ldflags "-s -w" strips debugging info to make the file smaller
+        run: go build -v -ldflags "-s -w" -o acexy.exe .
+
+      - name: Upload Executable
         uses: actions/upload-artifact@v4
         with:
-          name: Go-results-${{ matrix.go-version }}
-          path: acexy/TestResults-${{ matrix.go-version }}.json
+          name: Acexy-Windows-EXE
+          path: acexy.exe
